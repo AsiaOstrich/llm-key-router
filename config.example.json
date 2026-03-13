@@ -1,0 +1,19 @@
+{
+  "port": 4000,
+  "keysFile": "./keys.json",
+  "stateFile": "./data/state.json",
+  "stateSaveIntervalMs": 30000,
+  "cooldown": {
+    "defaultMs": 60000,
+    "429Ms": 300000,
+    "5xxMs": 30000,
+    "timeoutMs": 15000
+  },
+  "request": {
+    "timeoutMs": 120000
+  },
+  "telegram": {
+    "botToken": "",
+    "chatId": ""
+  }
+}

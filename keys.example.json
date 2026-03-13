@@ -1,0 +1,32 @@
+{
+  "providers": {
+    "ollama-cloud": {
+      "baseUrl": "https://api.ollama.com",
+      "keys": [
+        {
+          "token": "sk-xxx-1",
+          "label": "帳號 A",
+          "weeklyBudget": 5.00,
+          "priority": 1
+        },
+        {
+          "token": "sk-xxx-2",
+          "label": "帳號 B",
+          "weeklyBudget": 5.00,
+          "priority": 2
+        }
+      ]
+    },
+    "openrouter": {
+      "baseUrl": "https://openrouter.ai/api",
+      "keys": [
+        {
+          "token": "sk-or-xxx",
+          "label": "OpenRouter 主要",
+          "weeklyBudget": 10.00,
+          "priority": 1
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "llm-key-router",
+  "version": "0.1.0",
+  "description": "Lightweight LLM API Key management proxy — key pool, auto failover, quota tracking / 輕量級 LLM API Key 管理代理 — key 池管理、自動 failover、配額追蹤",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test src/**/*.test.js"
+  },
+  "keywords": ["llm", "api-key", "proxy", "router", "failover"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
