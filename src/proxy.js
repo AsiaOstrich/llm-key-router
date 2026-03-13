@@ -159,6 +159,13 @@ function createProxy(keyPool, opts = {}) {
     );
 
     const proxyReq = transport.request(proxyOpts, (proxyRes) => {
+      // Guard: skip if response already sent (e.g. after timeout retry)
+      // 防護：若回應已送出（如 timeout 後重試），跳過此回應
+      if (res.headersSent) {
+        proxyRes.resume(); // drain to free socket / 排空以釋放 socket
+        return;
+      }
+
       const statusCode = proxyRes.statusCode;
 
       // Success: pipe response back / 成功：直接 pipe 回去
