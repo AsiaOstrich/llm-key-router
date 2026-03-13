@@ -64,7 +64,6 @@ const gemini = loadJson(geminiPath);
 if (gemini && gemini.keys && gemini.keys.length > 0) {
   result.providers["gemini"] = {
     baseUrl: "https://generativelanguage.googleapis.com",
-    authMode: "header:x-goog-api-key",
     keys: gemini.keys.map((k, i) => ({
       token: k.token,
       label: k.id || k.note || `gemini-${i}`,
