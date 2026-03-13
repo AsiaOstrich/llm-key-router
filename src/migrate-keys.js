@@ -46,7 +46,7 @@ const result = { providers: {} };
 const ollama = loadJson(ollamaPath);
 if (ollama && ollama.keys && ollama.keys.length > 0) {
   result.providers["ollama-cloud"] = {
-    baseUrl: "https://api.ollama.com",
+    baseUrl: "https://ollama.com",
     keys: ollama.keys.map((k, i) => ({
       token: k.token,
       label: k.id || k.note || `ollama-${i}`,

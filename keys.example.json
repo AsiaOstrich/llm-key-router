@@ -1,19 +1,30 @@
 {
   "providers": {
     "ollama-cloud": {
-      "baseUrl": "https://api.ollama.com",
+      "baseUrl": "https://ollama.com",
       "keys": [
         {
           "token": "sk-xxx-1",
-          "label": "帳號 A",
+          "label": "帳號 A / Account A",
           "weeklyBudget": 5.00,
           "priority": 1
         },
         {
           "token": "sk-xxx-2",
-          "label": "帳號 B",
+          "label": "帳號 B / Account B",
           "weeklyBudget": 5.00,
           "priority": 2
+        }
+      ]
+    },
+    "gemini": {
+      "baseUrl": "https://generativelanguage.googleapis.com",
+      "keys": [
+        {
+          "token": "AIzaSy-xxx",
+          "label": "Gemini 帳號 A / Account A",
+          "weeklyBudget": 10.00,
+          "priority": 1
         }
       ]
     },
@@ -22,7 +33,7 @@
       "keys": [
         {
           "token": "sk-or-xxx",
-          "label": "OpenRouter 主要",
+          "label": "OpenRouter 主要 / Primary",
           "weeklyBudget": 10.00,
           "priority": 1
         }

@@ -41,6 +41,29 @@ describe("KeyPool", () => {
     });
   });
 
+  describe("authMode", () => {
+    it("returns default authMode 'bearer' when not specified / 未指定時回傳預設 bearer", () => {
+      const pool = makePool([{}]);
+      const picked = pool.pickKey(PROVIDER);
+      assert.equal(picked.authMode, "bearer");
+    });
+
+    it("returns custom authMode when specified / 指定時回傳自訂 authMode", () => {
+      const pool = new KeyPool(
+        {
+          [PROVIDER]: {
+            baseUrl: "https://api.example.com",
+            authMode: "header:x-goog-api-key",
+            keys: [{ token: "sk-0", label: "key-0", priority: 1, weeklyBudget: Infinity }],
+          },
+        },
+        { stateFile: "", stateSaveIntervalMs: 0 }
+      );
+      const picked = pool.pickKey(PROVIDER);
+      assert.equal(picked.authMode, "header:x-goog-api-key");
+    });
+  });
+
   describe("reportFailure + cooldown", () => {
     it("key enters cooldown after failure / 失敗後 key 進入 cooldown", () => {
       const pool = makePool([{}], {

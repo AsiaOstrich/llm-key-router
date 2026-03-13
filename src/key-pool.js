@@ -37,7 +37,11 @@ class KeyPool {
           totalErrors: 0,
         });
       }
-      this.providers.set(name, { baseUrl: provider.baseUrl, keys });
+      this.providers.set(name, {
+        baseUrl: provider.baseUrl,
+        authMode: provider.authMode || "bearer",
+        keys,
+      });
     }
 
     // Load persistent state / 載入持久化狀態
@@ -86,6 +90,7 @@ class KeyPool {
       token: picked.token,
       label: picked.label,
       baseUrl: provider.baseUrl,
+      authMode: provider.authMode,
     };
   }
 

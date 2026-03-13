@@ -133,6 +133,9 @@ function createProxy(keyPool, opts = {}) {
     const transport = isHttps ? https : http;
     const defaultPort = isHttps ? 443 : 80;
 
+    // Build auth header based on authMode / 依 authMode 建構認證 header
+    const authHeaders = buildAuthHeaders(picked.authMode, picked.token);
+
     const proxyOpts = {
       hostname: upstream.hostname,
       port: upstream.port || defaultPort,
@@ -141,7 +144,7 @@ function createProxy(keyPool, opts = {}) {
       headers: {
         ...filterHeaders(originalReq.headers),
         host: upstream.host,
-        authorization: `Bearer ${picked.token}`,
+        ...authHeaders,
       },
       timeout: timeoutMs,
     };
@@ -234,6 +237,26 @@ function createProxy(keyPool, opts = {}) {
   }
 
   return server;
+}
+
+/**
+ * Build auth headers based on authMode / 依 authMode 建構認證 headers
+ * - "bearer" (default) → Authorization: Bearer <token>
+ * - "header:<name>" → { <name>: <token> }  (e.g. Gemini's x-goog-api-key)
+ * @param {string} authMode
+ * @param {string} token
+ * @returns {object}
+ */
+function buildAuthHeaders(authMode, token) {
+  if (!authMode || authMode === "bearer") {
+    return { authorization: `Bearer ${token}` };
+  }
+  if (authMode.startsWith("header:")) {
+    const headerName = authMode.slice("header:".length);
+    return { [headerName]: token };
+  }
+  // Unknown authMode fallback to bearer / 未知 authMode 退回 bearer
+  return { authorization: `Bearer ${token}` };
 }
 
 /**
