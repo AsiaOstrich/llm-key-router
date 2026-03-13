@@ -135,32 +135,57 @@ class KeyPool {
     ks.totalErrors++;
 
     const cd = this.cooldownConfig;
-    let cooldownMs;
-    if (statusCode === 429) {
-      cooldownMs = cd["429Ms"] || 300_000;
-    } else if (statusCode >= 500) {
-      cooldownMs = cd["5xxMs"] || 30_000;
-    } else if (statusCode === 0) {
-      // timeout / network error
-      cooldownMs = cd.timeoutMs || 15_000;
+    const now = Date.now();
+    const msgLower = errorMsg.toLowerCase();
+
+    if (statusCode === 429 && msgLower.includes("weekly usage limit")) {
+      // Weekly quota exhausted — mark as spent, _checkWeekReset handles recovery
+      // 週額度耗盡 — 標記為已用完，_checkWeekReset 負責下週重置
+      this._checkWeekReset(ks);
+      ks.weeklySpent = ks.weeklyBudget < Infinity ? ks.weeklyBudget : 1;
+      console.log(
+        `[KeyPool] ${providerName}/"${ks.label}" weekly quota exhausted (429: ${errorMsg})`
+      );
+      this.onNotify(
+        `🚨 [${providerName}] Key "${ks.label}" weekly quota exhausted via 429`
+      );
+    } else if (statusCode === 429 && msgLower.includes("session")) {
+      // Session limit — cooldown until next UTC hour (max ~1hr)
+      // Session 限制 — cooldown 到下一個 UTC 整點（最多約 1 小時）
+      ks.cooldownUntil = Math.ceil(now / 3_600_000) * 3_600_000;
+      const until = new Date(ks.cooldownUntil).toISOString().slice(11, 16);
+      console.log(
+        `[KeyPool] ${providerName}/"${ks.label}" session limit, cooldown until ${until} UTC`
+      );
     } else {
-      cooldownMs = cd.defaultMs || 60_000;
+      // General rate limit or other errors / 一般 rate limit 或其他錯誤
+      let cooldownMs;
+      if (statusCode === 429) {
+        cooldownMs = cd["429Ms"] || 300_000;
+      } else if (statusCode >= 500) {
+        cooldownMs = cd["5xxMs"] || 30_000;
+      } else if (statusCode === 0) {
+        // timeout / network error
+        cooldownMs = cd.timeoutMs || 15_000;
+      } else {
+        cooldownMs = cd.defaultMs || 60_000;
+      }
+
+      ks.cooldownUntil = now + cooldownMs;
+
+      const reason =
+        statusCode === 429
+          ? "rate limited"
+          : statusCode >= 500
+            ? "server error"
+            : statusCode === 0
+              ? "timeout/network error"
+              : `HTTP ${statusCode}`;
+      const cdSec = Math.round(cooldownMs / 1000);
+      console.log(
+        `[KeyPool] ${providerName}/"${ks.label}" cooldown ${cdSec}s (${reason}${errorMsg ? ": " + errorMsg : ""})`
+      );
     }
-
-    ks.cooldownUntil = Date.now() + cooldownMs;
-
-    const reason =
-      statusCode === 429
-        ? "rate limited"
-        : statusCode >= 500
-          ? "server error"
-          : statusCode === 0
-            ? "timeout/network error"
-            : `HTTP ${statusCode}`;
-    const cdSec = Math.round(cooldownMs / 1000);
-    console.log(
-      `[KeyPool] ${providerName}/"${ks.label}" cooldown ${cdSec}s (${reason}${errorMsg ? ": " + errorMsg : ""})`
-    );
 
     // Check if all keys are unavailable / 檢查是否全部 key 都不可用
     const provider = this.providers.get(providerName);

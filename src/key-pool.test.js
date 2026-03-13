@@ -102,6 +102,59 @@ describe("KeyPool", () => {
     });
   });
 
+  describe("429 quota detection / 429 配額偵測", () => {
+    it("weekly usage limit → weeklySpent = weeklyBudget, key not picked / 週額度耗盡後 key 不被選取", () => {
+      const notifications = [];
+      const pool = makePool([{ weeklyBudget: 5.0 }], {
+        cooldown: { "429Ms": 300_000 },
+        onNotify: (text) => notifications.push(text),
+      });
+
+      const picked = pool.pickKey(PROVIDER);
+      pool.reportFailure(PROVIDER, picked.token, 429, "Weekly usage limit exceeded");
+
+      // Key should be excluded due to weeklySpent >= weeklyBudget
+      assert.equal(pool.pickKey(PROVIDER), null);
+
+      const status = pool.getStatus(PROVIDER);
+      assert.equal(status.keys[0].weeklySpent, 5.0);
+      // No cooldown set — quota mechanism handles it
+      assert.equal(status.keys[0].cooldownRemaining, 0);
+
+      // Notification fired
+      assert.ok(notifications.some((n) => n.includes("weekly quota exhausted")));
+    });
+
+    it("session limit → cooldown ≤ 1hr, weeklySpent unchanged / session 限制 cooldown 最多 1 小時", () => {
+      const pool = makePool([{ weeklyBudget: 5.0 }], {
+        cooldown: { "429Ms": 300_000 },
+      });
+
+      const picked = pool.pickKey(PROVIDER);
+      pool.reportFailure(PROVIDER, picked.token, 429, "Session rate limit reached");
+
+      const status = pool.getStatus(PROVIDER);
+      // Cooldown should be at most 3600s (next UTC hour)
+      assert.ok(status.keys[0].cooldownRemaining > 0);
+      assert.ok(status.keys[0].cooldownRemaining <= 3600);
+      // weeklySpent not affected
+      assert.equal(status.keys[0].weeklySpent, 0);
+    });
+
+    it("generic 429 → default 429Ms cooldown / 一般 429 維持預設 cooldown", () => {
+      const pool = makePool([{}], {
+        cooldown: { "429Ms": 300_000 },
+      });
+
+      const picked = pool.pickKey(PROVIDER);
+      pool.reportFailure(PROVIDER, picked.token, 429, "rate limit");
+
+      const status = pool.getStatus(PROVIDER);
+      assert.ok(status.keys[0].cooldownRemaining > 200);
+      assert.ok(status.keys[0].cooldownRemaining <= 300);
+    });
+  });
+
   describe("weekly quota / 週額度", () => {
     it("over-quota key is not picked / 超過週額度的 key 不被選取", () => {
       const pool = makePool([{ weeklyBudget: 1.0 }]);
