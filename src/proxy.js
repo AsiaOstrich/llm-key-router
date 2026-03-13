@@ -280,6 +280,7 @@ function filterHeaders(headers) {
     "upgrade",
     "proxy-authorization",
     "proxy-authenticate",
+    "authorization", // Always strip: router injects its own auth / 一律移除：router 會注入自己的認證
   ]);
   for (const [k, v] of Object.entries(headers)) {
     if (!hopByHop.has(k.toLowerCase())) {
